@@ -132,6 +132,13 @@ running on then forward the port. For example::
     $kubectl port-forward entityservice-monitor-4045544268-s34zl 8888:8888
 
 
+Prometheus Metrics
+------------------
+
+The flask application exposes metrics for prometheus on `/metrics` and a sidecar
+application creates further metrics from scraping the entity service's REST api.
+
+
 Upgrade Deployment with Helm
 ----------------------------
 
