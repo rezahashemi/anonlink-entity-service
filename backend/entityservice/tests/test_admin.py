@@ -24,6 +24,7 @@ def test_status(record_property):
     assert 'rate' in status_json
     assert 'project_count' in status_json
 
+
 def test_metrics(record_property):
     response = requests.get(url + '/metrics')
     assert response.status_code == 200, 'Server status was {}'.format(response.status_code)
