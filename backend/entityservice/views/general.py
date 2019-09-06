@@ -1,12 +1,12 @@
 import platform
 
 from structlog import get_logger
-from prometheus_client import generate_latest
 
 import anonlink
 
 from entityservice import cache
 import entityservice.database as db
+from entityservice.metrics import STATUS_REQUEST_COUNT
 from entityservice.version import __version__
 
 
@@ -17,6 +17,7 @@ def status_get():
     """Displays the latest mapping statistics"""
 
     status = cache.get_status()
+    STATUS_REQUEST_COUNT.inc()
 
     if status is None:
         # We ensure we can connect to the database during the status check
