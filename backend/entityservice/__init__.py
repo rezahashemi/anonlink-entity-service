@@ -2,6 +2,8 @@ import pathlib
 import uuid
 import connexion
 from flask import g, request
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
+from prometheus_client import make_wsgi_app
 import structlog
 try:
     import ijson.backends.yajl2_cffi as ijson
@@ -37,8 +39,14 @@ con_app.add_api(pathlib.Path("swagger.yaml"),
 app.config.from_object(config)
 
 logger = structlog.get_logger()
+
 # Tracer setup (currently just trace all requests)
 flask_tracer = FlaskTracer(initialize_tracer, True, app)
+
+# Add prometheus wsgi middleware to route /metrics requests
+app_dispatch = DispatcherMiddleware(app, {
+    '/metrics': make_wsgi_app()
+})
 
 
 @app.cli.command('initdb')

@@ -1,10 +1,16 @@
 import platform
 
+from structlog import get_logger
+from prometheus_client import generate_latest
+
 import anonlink
 
 from entityservice import cache
 import entityservice.database as db
 from entityservice.version import __version__
+
+
+logger = get_logger()
 
 
 def status_get():
