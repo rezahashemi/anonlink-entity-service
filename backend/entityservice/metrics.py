@@ -1,17 +1,10 @@
 """
 See Issue #42
 
-Version 1 could just collect metrics via the REST api:
-- mapping_count
-- mapping_ready_count
-- mapping_rate gauge
-
 """
 
-import time
-import requests
 
-from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily, Summary, REGISTRY, Histogram
+from prometheus_client.core import Counter, CounterMetricFamily, GaugeMetricFamily, Histogram
 
 
 UPLOAD_REQUEST_LATENCY = Histogram('es_upload_request_latency_seconds', 'CLK upload request latency')
