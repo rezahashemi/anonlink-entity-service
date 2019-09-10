@@ -33,6 +33,8 @@ USER user
 
 ADD . /var/www
 
+ENV prometheus_multiproc_dir /tmp
+
 # Serve using gunicorn. Ideally this has nginx in front of it!
 # Note we only use one process - otherwise our metrics get much
 # more complicated.
