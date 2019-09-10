@@ -2,16 +2,20 @@
 See Issue #42
 
 """
+from prometheus_client import Gauge
+from prometheus_client.core import Counter, Histogram
 
 
-from prometheus_client.core import Counter, CounterMetricFamily, GaugeMetricFamily, Histogram
+UPLOAD_REQUEST_LATENCY = Histogram('anonlink_upload_request_latency_seconds', 'CLK upload request latency')
 
+STATUS_REQUEST_LATENCY = Histogram('anonlink_status_request_latency_seconds', 'Status Request Latency')
+STATUS_REQUEST_COUNT = Counter('anonlink_status_counter_total', 'Number of Status Requests')
 
-UPLOAD_REQUEST_LATENCY = Histogram('es_upload_request_latency_seconds', 'CLK upload request latency')
+COMPARISON_RATE_GAUGE = Gauge('anonlink_comparison_rate', 'Max number of comparisons per second')
+PROJECT_COUNT = Gauge('anonlink_mapping_counter_total', 'Number of mappings')
 
-STATUS_REQUEST_LATENCY = Histogram('es_status_request_latency_seconds', 'Status Request Latency')
-STATUS_REQUEST_COUNT = Counter('es_status_counter_total', 'Number of Status Requests')
-
-MAPPING_RATE_GAUGE = GaugeMetricFamily('es_mapping_rate', 'Max number of comparisons per second')
-MAPPING_COUNT = CounterMetricFamily('es_mapping_counter_total', 'Number of mappings')
-READY_MAPPING_COUNT = CounterMetricFamily('es_mapping_counter_ready', 'Number of ready mappings')
+RUN_STATUS_COUNT = Counter(
+    'anonlink_run_status_counter',
+    'Number of status checks on a run',
+    ['run']
+)

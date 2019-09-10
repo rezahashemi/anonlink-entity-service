@@ -2,9 +2,10 @@ import pathlib
 import uuid
 import connexion
 from flask import g, request
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
-from prometheus_client import make_wsgi_app
 import structlog
+from prometheus_client import make_wsgi_app
+from werkzeug.wsgi import DispatcherMiddleware
+
 try:
     import ijson.backends.yajl2_cffi as ijson
 except ImportError:
@@ -29,6 +30,14 @@ from entityservice.object_store import connect_to_object_store
 from entityservice.settings import Config as config
 from entityservice.utils import fmt_bytes, iterable_to_stream
 
+
+# Add prometheus wsgi middleware to route /metrics requests
+# Note we have to call "app_dispatch" from gunicorn/wsgi
+app_dispatch = DispatcherMiddleware(app, {
+    '/metrics': make_wsgi_app()
+})
+
+
 con_app.add_api(pathlib.Path("swagger.yaml"),
                 base_path='/',
                 strict_validation=config.CONNEXION_STRICT_VALIDATION,
@@ -42,11 +51,6 @@ logger = structlog.get_logger()
 
 # Tracer setup (currently just trace all requests)
 flask_tracer = FlaskTracer(initialize_tracer, True, app)
-
-# Add prometheus wsgi middleware to route /metrics requests
-app_dispatch = DispatcherMiddleware(app, {
-    '/metrics': make_wsgi_app()
-})
 
 
 @app.cli.command('initdb')
@@ -73,6 +77,3 @@ def before_request():
         g.log.bind(**headers)
     g.flask_tracer = flask_tracer
 
-
-if __name__ == '__main__':
-    con_app.run(debug=True, port=8851)
