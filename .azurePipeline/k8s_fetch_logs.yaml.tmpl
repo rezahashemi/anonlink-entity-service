@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: $DEPLOYMENT_NAME-logscript
+  namespace: $NAMESPACE
+  labels:
+    deployment: $DEPLOYMENT_NAME
+data:
+  get_logs.py: |
+    #!/usr/bin/env python3
+
+    import json
+    import subprocess
+
+    def get_list_pods():
+        r = subprocess.run(
+            ["kubectl", "--namespace", "$NAMESPACE", "get", "pods", "-l", "deployment=$DEPLOYMENT_NAME", '-o', 'json'],
+            capture_output=True)
+        return json.loads(r.stdout)['items']
+
+
+    def get_logs_container(container_info, file, previous=False):
+        cmd = "kubectl --namespace $NAMESPACE logs {} {}".format(container_info['full_pod_name'], container_info['name'])
+        if previous:
+            cmd += " --previous"
+        subprocess.call(cmd.split(" "), stdout=file)
+
+
+    def info_from_pod(pod):
+        # print(json.dumps(pod, indent=2, sort_keys=True))
+        pod_name = pod.get('metadata').get('name')
+        list_containers = pod.get('status').get('containerStatuses')
+        for container in list_containers:
+            name_container = container.get('name')
+            restart_count = container.get('restartCount')
+            image_name = container.get('image')
+            info = {'full_pod_name': pod_name, 'name': name_container, 'image': image_name, 'restart_count': restart_count}
+
+            with open('results/pod-{}_container-{}.log'.format(info['pull_pod_name'], info['name']), 'wt') as f:
+                json.dump(info, f, indent=2, sort_keys=True)
+                f.write('\n\n')
+            with open('results/pod-{}_container-{}.log'.format(info['full_pod_name'], info['name']), 'at') as f:
+                get_logs_container(info, f)
+            if restart_count > 0:
+                with open('results/pod-{}_container-{}-previous.log'.format(info['full_pod_name'], info['name']),
+                          'at') as f:
+                    get_logs_container(info, f, previous=True)
+
+
+    if __name__ == '__main__':
+        list_pods = get_list_pods()
+        # print(list_pods[0])
+        for pod in list_pods:
+            info_from_pod(pod)
+
+---
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: $DEPLOYMENT_NAME-test
+  labels:
+    jobgroup: anonlink-integration-test
+    deployment: $DEPLOYMENT_NAME
+spec:
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        jobgroup: anonlink-integration-test
+        deployment: $DEPLOYMENT_NAME
+    spec:
+      securityContext:
+        runAsUser: 0
+        fsGroup: 0
+      restartPolicy: Never
+      volumes:
+        - name: results
+          persistentVolumeClaim:
+            claimName: $PVC
+        - name: config-volume
+          configMap:
+            name: $DEPLOYMENT_NAME-logscript
+      containers:
+        - name: entitytester
+          image: $IMAGE_NAME_WITH_TAG
+          imagePullPolicy: Always
+          env:
+            - name: ENTITY_SERVICE_URL
+              value: http://$SERVICE_IP/api/v1
+          command: ["dockerize", "-wait", "tcp://$SERVICE_IP/api/v1/status", "-timeout", "5m", "python", "/script/get_logs.py"]
+          volumeMounts:
+            - mountPath: /mnt
+              name: results
+            - name: config-volume
+              mountPath: /script
