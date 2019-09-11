@@ -58,7 +58,7 @@ data:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: $DEPLOYMENT_NAME-test
+  name: $DEPLOYMENT_NAME-logger
   labels:
     jobgroup: anonlink-integration-test
     deployment: $DEPLOYMENT_NAME
@@ -83,7 +83,7 @@ spec:
           configMap:
             name: $DEPLOYMENT_NAME-logscript
       containers:
-        - name: entitytester
+        - name: logger
           image: $IMAGE_NAME_WITH_TAG
           imagePullPolicy: Always
           env:

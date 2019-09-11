@@ -261,6 +261,20 @@ stages:
       env:
         KUBECONFIG: $(KUBECONFIGFILE)
       displayName: 'Copy the results from the test job pod.'
+
+    - script: |
+        echo "Get the logs"
+        cat .azurePipeline/k8s_fetch_logs.yaml.tmpl | \
+        sed 's|\$DEPLOYMENT_NAME'"|$(DEPLOYMENT)|g" | \
+        sed 's|\$NAMESPACE'"|$(NAMESPACE)|g" | \
+        kubectl apply -n=$(NAMESPACE) -f -
+        #kubectl wait -n=$(NAMESPACE) --timeout=120s --for=condition=Ready pods/$(POD_NAME)
+        echo "Get the logs."
+        kubectl logs -n $(NAMESPACE) job/$DEPLOYMENT_NAME-logger
+      env:
+        KUBECONFIG: $(KUBECONFIGFILE)
+      displayName: 'Copy the results from the test job pod.'
+
     # Finally, we can publish the test results.
     - task: PublishTestResults@2
       condition: succeeded()
