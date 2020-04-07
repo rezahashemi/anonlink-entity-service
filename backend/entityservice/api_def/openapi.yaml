@@ -86,6 +86,8 @@ info:
 servers:
 - url: https://anonlink.easd.data61.xyz/api/v1
   description: default EASD cluster
+- url: http://localhost:8851/api/v1
+  description: Local deployment
 
 paths:
   /status:
@@ -276,6 +278,36 @@ paths:
         '503':
           $ref: '#/components/responses/RateLimited'
 
+  '/projects/{project_id}/authorize-external-upload':
+    get:
+      operationId: entityservice.views.objectstore.authorize_external_upload
+      summary: Upload encoded PII data to a linkage project.
+      tags:
+        - Project
+      description: |
+        Returns a set of temporary security credentials that the client can use to upload data to the
+        object store.
+      parameters:
+        - $ref: '#/components/parameters/project_id'
+        - $ref: '#/components/parameters/token'
+      responses:
+        '201':
+          description: Temporary Object Store Credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectStoreUploadCredentials'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/Error'
+        '503':
+          $ref: '#/components/responses/RateLimited'
+
   '/projects/{project_id}/clks':
     post:
       operationId: entityservice.views.project.project_clks_post
@@ -327,12 +359,6 @@ paths:
               oneOf:
                 - $ref: '#/components/schemas/CLKUpload'
                 - $ref: '#/components/schemas/CLKnBlockUpload'
-          # unfortunately connexion can not handle multiple different encoding types on an endpoint.
-          #application/octet-stream:
-          #  schema:
-          #    type: string
-          #    format: binary
-
       responses:
         '201':
           description: Data Uploaded
@@ -1076,3 +1102,20 @@ components:
           type: string
         message:
           type: string
+
+    ObjectStoreUploadCredentials:
+      description: Temporary credentials allowing client to upload a file to an object store.
+      type: object
+      properties:
+        credentials:
+          description: Object Store credentials (compatible with both AWS & MinIO)
+          type: object
+          properties:
+            AccessKeyId:
+              type: string
+            SecretAccessKey:
+              type: string
+            Expiration:
+              type: string
+            SessionToken:
+              type: string

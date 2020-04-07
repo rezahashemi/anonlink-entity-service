@@ -18,6 +18,8 @@ services:
       - SERVER=http://nginx:8851
       - INITIAL_DELAY=20
       - DATABASE_PASSWORD=rX%QpV7Xgyrz
+      - MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+      - MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
     command: /bin/sh -c "dockerize -wait tcp://db:5432 -wait tcp://nginx:8851/api/v1/status -timeout 1m python -m pytest -n 1 entityservice/integrationtests --junitxml=testResults.xml -x"
     depends_on:
       - db
