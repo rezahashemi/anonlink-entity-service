@@ -246,7 +246,7 @@ $ docker run -it --entrypoint /bin/sh minio/mc
 # mc admin policy set minio writeonly user=newuser
 ```
 
-Add a _restricted_ section to `.aws/configure`:
+Add a _restricted_ section to your `.aws/configure`:
 
 ```
 [restricted]
@@ -262,6 +262,8 @@ aws --profile restricted --endpoint-url http://localhost:9000 sts assume-role --
     '{"Version":"2012-10-17","Statement":[{"Sid":"Stmt1","Effect":"Allow","Action":"s3:*","Resource":"arn:aws:s3:::*"}]}' \
     --role-arn arn:xxx:xxx:xxx:xxxx --role-session-name anything
 ```
+
+Alternatively use minio or boto3 to retrieve credentials.
 
 The backend will use the minio-py client library to retrieve the temporary credentials.
 
