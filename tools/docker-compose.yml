@@ -51,6 +51,7 @@ services:
       - db_init
       - redis
       - minio
+      - objectstore_init
 
   # The application server can also setup the database
   db_init:
