@@ -18,6 +18,9 @@ def assume_role(mc, RoleArn=None, RoleSessionName=None, Policy=None, DurationSec
     """
     Generate temporary credentials using AssumeRole STS API.
 
+    Note a PR has been opened against minio-py to add this functionality upstream.
+    https://github.com/minio/minio-py/pull/874
+
     https://github.com/minio/minio/blob/master/docs/sts/assume-role.md
 
     :param mc: Minio client
@@ -36,7 +39,6 @@ def assume_role(mc, RoleArn=None, RoleSessionName=None, Policy=None, DurationSec
         "RoleArn": "arn:xxx:xxx:xxx:xxxx" if RoleArn is None else RoleArn,
         "RoleSessionName": "anything" if RoleSessionName is None else RoleSessionName,
     }
-
     # Add optional elements to the request
     if Policy is not None:
         query["Policy"] = Policy
