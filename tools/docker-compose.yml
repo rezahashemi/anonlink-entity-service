@@ -51,7 +51,6 @@ services:
       - db_init
       - redis
       - minio
-      - objectstore_init
 
   # The application server can also setup the database
   db_init:
@@ -68,7 +67,7 @@ services:
   objectstore_init:
     image: minio/mc
     environment:
-      - INITIAL_DELAY=10
+      - INITIAL_DELAY=5
       # MC_HOST_alias is equivalent to manually configuring a minio host
       # mc config host add minio http://minio:9000 <MINIO_ACCESS_KEY> <MINIO_SECRET_KEY>
       - MC_HOST_minio=http://AKIAIOSFODNN7EXAMPLE:wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY@minio:9000
