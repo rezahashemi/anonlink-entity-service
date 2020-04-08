@@ -4,6 +4,7 @@ import hashlib
 import xml.etree.ElementTree
 from urllib.parse import urlencode
 
+from minio import ResponseError
 from minio.credentials import Static, Credentials
 from minio.fold_case_dict import FoldCaseDict
 from minio.compat import urlsplit
@@ -27,6 +28,8 @@ def assume_role(mc, RoleArn=None, RoleSessionName=None, Policy=None, DurationSec
     :return: A :class:`Credentials` provider with the temporary credentials.
     """
     region = 'us-east-1'
+    method = 'POST'
+
     query = {
         "Action": "AssumeRole",
         "Version": "2011-06-15",
@@ -51,18 +54,20 @@ def assume_role(mc, RoleArn=None, RoleSessionName=None, Policy=None, DurationSec
     # Create signature headers
     content_sha256_hex = get_sha256_hexdigest(content)
 
-    signed_headers = sign_v4("POST", url, region, headers,
+    signed_headers = sign_v4(method, url, region, headers,
                              mc._credentials,
                              content_sha256=content_sha256_hex,
                              request_datetime=datetime.utcnow(),
                              service='sts'
                              )
 
-    response = mc._http.urlopen("POST", url, body=content, headers=signed_headers, preload_content=True)
+    response = mc._http.urlopen(method, url, body=content, headers=signed_headers, preload_content=True)
+
+    if response.status != 200:
+        raise ResponseError(response, method).get_exception()
 
     # Parse the XML Response - getting the credentials as a Minio Credentials provider
     return parse_assume_role(response.data)
-
 
 
 def generate_signing_key(date, region, secret_key, service="s3"):
@@ -72,6 +77,7 @@ def generate_signing_key(date, region, secret_key, service="s3"):
     :param date: Date is input from :meth:`datetime.datetime`
     :param region: Region should be set to bucket region.
     :param secret_key: Secret access key.
+    :param service: The signing key is scoped to a service e.g. s3
     """
     formatted_date = date.strftime("%Y%m%d")
 
