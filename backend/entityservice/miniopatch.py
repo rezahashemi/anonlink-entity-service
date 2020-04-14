@@ -4,8 +4,10 @@ import hashlib
 import xml.etree.ElementTree
 from urllib.parse import urlencode
 
+import pytz
 from minio import ResponseError
 from minio.credentials import Static, Credentials
+from minio.credentials.credentials import Value
 from minio.fold_case_dict import FoldCaseDict
 from minio.compat import urlsplit
 from minio.helpers import get_sha256_hexdigest
@@ -68,7 +70,6 @@ def assume_role(mc, RoleArn=None, RoleSessionName=None, Policy=None, DurationSec
     if response.status != 200:
         raise ResponseError(response, method).get_exception()
 
-    # Parse the XML Response - getting the credentials as a Minio Credentials provider
     return parse_assume_role(response.data)
 
 
@@ -238,6 +239,24 @@ def sign_v4(method, url, region, headers=None,
     headers['Authorization'] = authorization_header
     return headers
 
+def _iso8601_to_utc_datetime(date_string):
+    """
+    Convert iso8601 date string into UTC time.
+
+    :param date_string: iso8601 formatted date string.
+    :return: :class:`datetime.datetime` with timezone set to UTC
+    """
+
+    # Handle timestamps with and without fractional seconds. Some non-AWS
+    # vendors (e.g. Dell EMC ECS) are not consistent about always providing
+    # fractional seconds.
+    try:
+        parsed_date = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ')
+    except ValueError:
+        parsed_date = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
+    tz_aware_datetime = pytz.utc.localize(parsed_date)
+    return tz_aware_datetime
+
 
 def parse_assume_role(data):
     """
@@ -256,5 +275,8 @@ def parse_assume_role(data):
     access_key = credentials_elem.find("sts:AccessKeyId", ns).text
     secret_key = credentials_elem.find("sts:SecretAccessKey", ns).text
     session_token = credentials_elem.find("sts:SessionToken", ns).text
+    expiry_str = credentials_elem.find("sts:Expiration", ns).text
+    expiry = _iso8601_to_utc_datetime(expiry_str)
 
-    return Credentials(provider=Static(access_key, secret_key, session_token))
+    return Value(access_key, secret_key, session_token), expiry
+

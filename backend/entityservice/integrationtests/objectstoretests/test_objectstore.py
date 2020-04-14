@@ -57,30 +57,3 @@ class TestAssumeRole:
 
         # this path is allowed in the policy however
         newly_restricted_mc_client.put_object(bucket_name, '2020/testobject', io.BytesIO(b'data'), length=4)
-
-    # This is another approach using boto
-    # Commented out as we don't have boto in our dependencies - but is a valid alternative to minio for assume_role
-    # def test_create_temp_credentials_with_boto(self, upload_restricted_boto_session):
-    #     sts_client = upload_restricted_boto_session.client('sts', endpoint_url="http://minio:9000")
-    #     response = sts_client.assume_role(
-    #         RoleArn="arn:xxx:xxx:xxx:xxxx",
-    #         RoleSessionName="anything",
-    #         Policy=restricted_upload_policy,
-    #         DurationSeconds=3000,
-    #     )
-    #     assert 'Credentials' in response
-    #     assert 'AccessKeyId' in response['Credentials']
-    #
-    #     newly_restricted_mc_client = Minio("minio:9000",
-    #                                        access_key=response['Credentials']['AccessKeyId'],
-    #                                        secret_key=response['Credentials']['SecretAccessKey'],
-    #                                        session_token=response['Credentials']['SessionToken'],
-    #                                        region='us-east-1',
-    #                                        secure=False)
-    #     bucket_name = "uploads"
-    #     # Request should fail if we have applied the more restrictive policy
-    #     with pytest.raises(minio.error.AccessDenied):
-    #         newly_restricted_mc_client.put_object(bucket_name, 'testobject_bototest', io.BytesIO(b'data'), length=4)
-    #
-    #     # this path is allowed in the policy however
-    #     newly_restricted_mc_client.put_object(bucket_name, '2020/testobject_bototest', io.BytesIO(b'data'), length=4)

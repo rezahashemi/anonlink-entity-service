@@ -14,7 +14,23 @@ def connect_to_object_store():
         secure=False
     )
     logger.debug("Connected to minio")
+    mc.set_app_info("anonlink-client", "minio general client")
     create_bucket(mc, config.MINIO_BUCKET)
+    return mc
+
+
+def connect_to_upload_object_store(trace=False):
+    mc = minio.Minio(
+        config.UPLOAD_OBJECT_STORE_SERVER,
+        config.UPLOAD_OBJECT_STORE_ACCESS_KEY,
+        config.UPLOAD_OBJECT_STORE_SECRET_KEY,
+        secure=False
+    )
+    mc.set_app_info("anonlink-upload", "minio client for uploads")
+    if trace:
+        mc.trace_on(trace)
+    logger.debug("Connected to minio upload account")
+
     return mc
 
 
