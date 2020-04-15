@@ -4,22 +4,6 @@ import pytest
 
 from entityservice.settings import Config as config
 
-# Commented out as we don't have boto3 in our dependencies - but is a valid alternative to minio for assume_role
-# import boto3
-# @pytest.fixture(scope='session')
-# def upload_restricted_boto_session():
-#     """
-#     Note this assumes that non-root object store credentials
-#     have been setup in the object store.
-#     """
-#
-#     return boto3.Session(
-#         aws_access_key_id=config.UPLOAD_OBJECT_STORE_ACCESS_KEY,
-#         aws_secret_access_key=config.UPLOAD_OBJECT_STORE_SECRET_KEY,
-#         region_name='us-east-1'
-#     )
-
-
 @pytest.fixture(scope='session')
 def upload_restricted_minio_client():
     restricted_mc_client = minio.Minio(
