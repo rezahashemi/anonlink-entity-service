@@ -1,12 +1,10 @@
-import datetime
 import sys
 import json
 
 import opentracing
 from flask import request
 
-import requests
-
+from entityservice.settings import Config as config
 import entityservice.database as db
 from entityservice.miniopatch import assume_role
 from entityservice.object_store import connect_to_upload_object_store
@@ -37,6 +35,7 @@ def _get_upload_policy(bucket_name="uploads", path="*"):
 
 
 def authorize_external_upload(project_id):
+    assert config.UPLOAD_OBJECT_STORE_ENABLED, "Feature disabled"
 
     headers = request.headers
 
@@ -44,20 +43,23 @@ def authorize_external_upload(project_id):
 
     log.info("Authorizing external upload")
     token = precheck_upload_token(project_id, headers, parent_span)
+    log.debug(f"Update token is valid")
     with db.DBConn() as conn:
         dp_id = db.get_dataprovider_id(conn, token)
+        log = log.bind(dpid=dp_id)
 
-    log.debug(f"Update token is valid")
-    with opentracing.tracer.start_span('assume-role-request', child_of=parent_span) as span:
-        client = connect_to_upload_object_store(trace=sys.stdout)
+    with opentracing.tracer.start_span('assume-role-request', child_of=parent_span):
+        client = connect_to_upload_object_store()
         client.set_app_info("anonlink", "development version")
 
-        bucket_name = "uploads"
-        # Note these credentials are very locked down - our upload client can't even check buckets exist
-        credential_values, expiry = assume_role(client, Policy=_get_upload_policy(bucket_name, path=f"{project_id}/{dp_id}"))
+        bucket_name = config.UPLOAD_OBJECT_STORE_BUCKET
+
+        credential_values, expiry = assume_role(client,
+                                                Policy=_get_upload_policy(bucket_name, path=f"{project_id}/{dp_id}"),
+                                                DurationSeconds=config.UPLOAD_OBJECT_STORE_STS_DURATION)
         log.info("Created temporary object store credentials")
-        log.debug(credential_values)
     credentials_json = ObjectStoreCredentials().dump(credential_values)
+    log.debug("Temp credentials", **credentials_json)
 
     # Convert datetime to ISO 8601 string
     credentials_json["Expiration"] = expiry.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
@@ -65,8 +67,7 @@ def authorize_external_upload(project_id):
     return {
         "credentials": credentials_json,
         "upload": {
-            # TODO changeme
-            "endpoint": "localhost:9000",
+            "endpoint": config.UPLOAD_OBJECT_STORE_SERVER,
             "bucket": bucket_name,
             "path": f"{project_id}/{dp_id}"
         }
