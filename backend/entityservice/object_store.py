@@ -19,7 +19,12 @@ def connect_to_object_store():
     return mc
 
 
-def connect_to_upload_object_store(trace=False):
+def connect_to_upload_object_store():
+    """
+    Instantiate a minio client with an upload only policy applied.
+
+    :return:
+    """
     mc = minio.Minio(
         config.UPLOAD_OBJECT_STORE_SERVER,
         config.UPLOAD_OBJECT_STORE_ACCESS_KEY,
@@ -27,8 +32,6 @@ def connect_to_upload_object_store(trace=False):
         secure=False
     )
     mc.set_app_info("anonlink-upload", "minio client for uploads")
-    if trace:
-        mc.trace_on(trace)
     logger.debug("Connected to minio upload account")
 
     return mc
