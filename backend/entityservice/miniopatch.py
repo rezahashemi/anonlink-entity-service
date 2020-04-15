@@ -1,3 +1,5 @@
+# TODO ideally this is upstream
+
 from datetime import datetime
 import hmac
 import hashlib
@@ -29,7 +31,9 @@ def assume_role(mc, RoleArn=None, RoleSessionName=None, Policy=None, DurationSec
     :param RoleArn:
     :param RoleSessionName:
     :param Policy:
-    :param DurationSeconds:
+    :param DurationSeconds: The duration, in seconds. The value can range from 900 seconds
+                            (15 minutes) up to 12 hours. If value is higher than this setting, then operation
+                            fails. By default, the value is set to 3600 seconds.
     :return: A :class:`Credentials` provider with the temporary credentials.
     """
     region = 'us-east-1'
