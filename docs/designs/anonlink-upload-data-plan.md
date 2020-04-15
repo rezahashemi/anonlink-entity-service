@@ -246,7 +246,7 @@ $ docker run -it --entrypoint /bin/sh minio/mc
 # mc admin policy set minio writeonly user=newuser
 ```
 
-Add a _restricted_ section to your `.aws/configure`:
+Add a _restricted_ section to `.aws/configure`:
 
 ```
 [restricted]
