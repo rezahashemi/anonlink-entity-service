@@ -5,6 +5,7 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
+# TODO during review remove git and use release of minio rather than master
 # Search for current versions at
 # https://pkgs.alpinelinux.org/packages?name=libpq&branch=v3.11&arch=x86_64
 # postgresql-dev needed for pg_config
@@ -20,7 +21,8 @@ RUN apk add --no-cache \
     libstdc++=9.2.0-r4 \
     mpc1-dev=1.1.0-r1 \
     yajl=2.1.0-r0 \
-    libpq=12.2-r0 && \
+    libpq=12.2-r0 \
+    git && \
     ln -s /usr/bin/python3 /usr/bin/python && \
     ln -s /usr/bin/pip3 /usr/bin/pip && \
     apk add --no-cache --virtual .build-deps \

@@ -10,8 +10,8 @@ import io
 import minio
 from minio import Minio
 import pytest
+from minio.credentials import AssumeRoleProvider, Credentials
 
-from entityservice.miniopatch import assume_role
 from entityservice.object_store import connect_to_object_store
 from entityservice.settings import Config
 
@@ -50,7 +50,10 @@ class TestAssumeRole:
         # Should be able to put an object though
         upload_restricted_minio_client.put_object(bucket_name, 'testobject', io.BytesIO(b'data'), length=4)
 
-        temp_creds, expiry = assume_role(upload_restricted_minio_client, Policy=restricted_upload_policy)
+        credentials_provider = AssumeRoleProvider(upload_restricted_minio_client,
+                                                  Policy=restricted_upload_policy
+                                                  )
+        temp_creds = Credentials(provider=credentials_provider)
 
         newly_restricted_mc_client = Minio(upload_endpoint, credentials=temp_creds, region='us-east-1', secure=False)
 
