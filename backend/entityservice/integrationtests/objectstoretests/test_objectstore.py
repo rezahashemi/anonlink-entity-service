@@ -12,7 +12,7 @@ from minio import Minio
 import pytest
 from minio.credentials import AssumeRoleProvider, Credentials
 
-from entityservice.object_store import connect_to_object_store
+from entityservice.object_store import connect_to_object_store, connect_to_upload_object_store
 from entityservice.settings import Config
 
 restricted_upload_policy = """{
@@ -35,12 +35,13 @@ restricted_upload_policy = """{
 
 class TestAssumeRole:
 
-    def test_temp_credentials_minio(self, upload_restricted_minio_client):
+    def test_temp_credentials_minio(self):
 
         upload_endpoint = Config.UPLOAD_OBJECT_STORE_SERVER
         bucket_name = "uploads"
 
         root_mc_client = connect_to_object_store()
+        upload_restricted_minio_client = connect_to_upload_object_store()
         if not root_mc_client.bucket_exists(bucket_name):
             root_mc_client.make_bucket(bucket_name)
 

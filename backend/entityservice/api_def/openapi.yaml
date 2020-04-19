@@ -8,7 +8,7 @@
 #   descriptions.
 openapi: 3.0.0
 info:
-  version: '1.3'
+  version: '1.13'
   title: Entity Matching API
   x-logo:
     url: http://clkhash.readthedocs.io/en/latest/_static/logo.svg
