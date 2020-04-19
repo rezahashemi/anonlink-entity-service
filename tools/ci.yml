@@ -16,7 +16,7 @@ services:
     image: data61/anonlink-app:${TAG:-latest}
     environment:
       - SERVER=http://nginx:8851
-      - INITIAL_DELAY=20
+      - INITIAL_DELAY=30
       - DATABASE_PASSWORD=rX%QpV7Xgyrz
       - MINIO_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
       - MINIO_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
